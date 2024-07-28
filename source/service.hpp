@@ -94,9 +94,9 @@ namespace cloud
 
                 ss << "<td><a href='" << s._url_path << "'>" << util(s._real_path).fileName() << "</a></td>";
 
-                ss << "<td align='right'>  " << "\t" << converter(s._mtime) << " </td>";
+                ss << "<td align='right'>  " << "&nbsp;" << converter(s._mtime) << " </td>";
 
-                ss << "<td align='right'>  " << "\t" << s._fsize / 1024 << "K</td>";
+                ss << "<td align='right'>  " << "&nbsp;" << s._fsize / 1024 << "K</td>";
 
                 ss << "</tr>";
             }
