@@ -3,7 +3,7 @@
 
 .PHONY:cloud
 cloud::cloud.cpp
-	g++ -o $@ $^ -L./lib -std=c++11 -lstdc++fs -ljsoncpp -lbundle -lpthread -g
+	g++ -o $@ $^ -L./lib -std=c++11 -lstdc++fs -ljsoncpp -lbundle -lpthread -g -lssl -lcrypto #-DCPPHTTPLIB_OPENSSL_SUPPORT
 
 .PHONY:clean
 clean:

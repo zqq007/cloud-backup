@@ -1,7 +1,10 @@
 #pragma once
 
+#define CPPHTTPLIB_OPENSSL_SUPPORT
+
 #include <iostream>
 #include <string>
+#include <time.h>
 #include "httplib.h"
 #include "config.hpp"
 #include "data.hpp"
@@ -13,8 +16,10 @@ namespace cloud
     class Service
     {
     public:
-        Service()
+        Service():_server("server-cert.pem", "server-key.pem")
         {
+            // _server.new_task_queue = [] { return new httplib::ThreadPool(8); }; // 配置线程池大小
+            //_server("server-cert.pem", "server-key.pem");
             Config *config = Config::getInstance();
             _server_port = config->getServerPort();
             _server_ip = config->getServerIP();
@@ -39,22 +44,36 @@ namespace cloud
     private:
         static void upLoad(const httplib::Request &req, httplib::Response &res)
         {
+            clock_t start, end;
+
+            start = clock();
+            std::cout << start << std::endl;
+            
             // 判断有没有文件上传
             bool ret = req.has_file("file");
             if (!ret)
             {
                 res.status = 400;
                 return;
-            }
+            } 
+
+            start = clock();
+            std::cout << "This comment, start is " << start << ",there's a file coming" << std::endl;
 
             // 获取文件信息
             const auto &file = req.get_file_value("file");
             std::string back_dir = Config::getInstance()->getBackDir();
             std::string real_path = back_dir + util(file.filename).fileName();
             util fu(real_path);
+            std::cout << real_path << std::endl;
 
             // 将数据写入文件中
             fu.setContent(file.content);
+
+            end = clock();
+            std::cout << "end is " << end << std::endl;
+            double total_t = (double)(end - start) / CLOCKS_PER_SEC;
+            std::cout << total_t << std::endl;
 
             // 组织备份信息，并添加到数据管理模块中
             cloud::BackupInfo info;
@@ -78,32 +97,39 @@ namespace cloud
         static void listShow(const httplib::Request &req, httplib::Response &res)
         {
             // 先获取所有文件信息
-            std::vector<cloud::BackupInfo> arr;
-            data->getAll(&arr);
+            // std::vector<cloud::BackupInfo> arr;
+            // data->getAll(&arr);
 
-            // 再根据所有文件信息构建http响应
-            std::stringstream ss;
-            ss << "<!DOCTYPE html>";
-            ss << "<html lang='ch'><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'>";
-            ss << "<title>Download</title></head>";
-            ss << "<body><h1>Download</h1><table>";
+            // // 再根据所有文件信息构建http响应
+            // std::stringstream ss;
+            // ss << "<!DOCTYPE html>";
+            // ss << "<html lang='ch'><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'>";
+            // ss << "<title>Download</title></head>";
+            // ss << "<body><h1>Download</h1><table>";
 
-            for (auto &s : arr)
-            {
-                ss << "<tr>";
+            // for (auto &s : arr)
+            // {
+            //     ss << "<tr>";
 
-                ss << "<td><a href='" << s._url_path << "'>" << util(s._real_path).fileName() << "</a></td>";
+            //     ss << "<td><a href='" << s._url_path << "'>" << util(s._real_path).fileName() << "</a></td>";
 
-                ss << "<td align='right'>  " << "&nbsp;" << converter(s._mtime) << " </td>";
+            //     ss << "<td align='right'>  " << "&nbsp;" << converter(s._mtime) << " </td>";
 
-                ss << "<td align='right'>  " << "&nbsp;" << s._fsize / 1024 << "K</td>";
+            //     ss << "<td align='right'>  " << "&nbsp;" << s._fsize / 1024 << "K</td>";
 
-                ss << "</tr>";
-            }
+            //     ss << "</tr>";
+            // }
 
-            ss << "</table></body></html>";
+            // ss << "</table></body></html>";
 
-            res.body = ss.str();
+            util filename("./wwwroot/listshow.html");
+
+            std::string filecontent;
+            filename.getContent(&filecontent);
+
+            // std::cout << filecontent.c_str() << std::endl;
+
+            res.body = filecontent.c_str();
             res.set_header("Content-Type", "text/html");
             res.status = 200;
         }
@@ -124,6 +150,7 @@ namespace cloud
 
         static void download(const httplib::Request &req, httplib::Response &res)
         {
+            // std::cout << req.path << std::endl;
             // 根据请求获取文件信息
             BackupInfo info;
             data->getOneByURL(req.path, &info);
@@ -176,6 +203,6 @@ namespace cloud
         int _server_port;
         std::string _server_ip;
         std::string _download_prefix;
-        httplib::Server _server;
+        httplib::SSLServer _server;
     };
 }

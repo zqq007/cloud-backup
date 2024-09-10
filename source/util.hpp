@@ -9,6 +9,8 @@
 #include <jsoncpp/json/json.h>
 #include "sys/stat.h"
 #include "bundle.h"
+#include <unistd.h>
+#include <fcntl.h>
 
 namespace cloud
 {
@@ -93,8 +95,27 @@ namespace cloud
         // 读取文件数据
         bool getContent(std::string *body)
         {
-            size_t fsize = this->fileSize();
-            return getPosLen(body, 0, fsize);
+            // size_t fsize = this->fileSize();
+            // return getPosLen(body, 0, fsize);
+
+            body->clear();
+            struct stat s;
+            int n = stat(filename_.c_str(), &s);
+            if (n < 0)
+                return false;
+
+            int size = s.st_size;
+            body->resize(size);
+
+            int fd = open(filename_.c_str(), O_RDONLY);
+            if (fd < 0)
+                return false;
+
+            // read(fd, const_cast<char *>(buff->c_str()), size);
+            read(fd, &(*body)[0], size);
+
+            close(fd);
+            return true;
         }
 
         // 向文件写入数据
