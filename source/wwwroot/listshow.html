@@ -10,33 +10,25 @@
             padding: 0;
         }
 
-        ul {
+        /* ul {
             list-style: none;
+        } */
+
+        ol {
+            padding: 10px;
         }
 
         a {
             text-decoration: none;
+            width: 100%;
         }
 
-        ul>li a {
-            transform: translateY(-20px);
-            box-shadow: 0 26px 40px -24px rgb(0 36 100 / 50%);
+        a:hover {
+            text-decoration: underline;
         }
 
         body {
-            background-image: url("https://101.34.67.147:8080/photo");
-            background-repeat: no-repeat;
             background-color: rgb(245, 245, 245);
-        }
-
-        .box {
-            overflow: hidden;
-            width: 1226px;
-            height: 615px;
-            margin: 10px auto;
-            background-color: white;
-            border: solid 1px;
-            border-radius: 10px;
         }
 
         .box>.left {
@@ -45,9 +37,19 @@
             /* border: solid 1px skyblue; */
         }
 
+        .box>.left li {
+            height: 24px;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .box>.left li a {
+            line-height: 24px;
+        }
+
         .box>.right {
             float: right;
-            margin-right: 10px;
+            /* margin-right: 10px; */
             /* border: solid 1px pink; */
         }
     </style>
@@ -57,14 +59,15 @@
     <div class="box">
         <div class="left">
             <h1>DownLoad</h1>
-            <ul id="file-list"></ul>
+            <ol id="file-list"></ol>
         </div>
         <div class="right">
+            <h1>UpLoad</h1>
             <form action="https://101.34.67.147:9000/upload" method="post" enctype="multipart/form-data">
                 <div>
-                    <input type="file" name="file">
+                    <input id="file" type="file" name="file">
                 </div>
-                <div><input type="submit" value="上传" onclick="location.reload()"></div>
+                <div><input id="submit" type="submit" value="上传" onclick="return check()"></div>
             </form>
         </div>
     </div>
@@ -73,6 +76,31 @@
         function getFileNameByPath(path) {
             let pos = path.lastIndexOf("/");
             return path.substring(pos + 1);
+        }
+
+        function getFileSize(file_size) {
+            let arr = ["Byte", "KB", "MB", "GB"];
+            let count = 0;
+            while (file_size >= 1024 && count < arr.length) {
+                file_size /= 1024;
+                count++;
+            }
+            if (count == arr.length) count--;
+            return parseInt(file_size) + arr[count];
+        }
+
+        function URLCheck(url) {
+            let new_url = "";
+            for (let i = 0; i < url.length; ++i) {
+                if (url[i] === '#') {
+                    new_url += "%23";
+                } else if (url[i] === ' ') {
+                    new_url += "%20";
+                } else {
+                    new_url += url[i];
+                }
+            }
+            return new_url;
         }
 
         async function fetchJsonData() {
@@ -100,21 +128,40 @@
                 let fileList = document.createElement("li");
                 let kv = data[index];
                 let fileLink = document.createElement("a");
-                fileLink.href = kv.url;
+                fileLink.href = URLCheck(kv.url);
                 fileLink.textContent = getFileNameByPath(kv.real_path);
                 let fileSize = document.createElement("span");
-                fileSize.textContent = "\t" + kv.fsize;
+                // fileSize.textContent = "\t" + kv.fsize;
+                fileSize.textContent = "\t" + getFileSize(kv.fsize); //The file size is set to int
                 // fileSize.textContent = kv.fsize;
                 fileList.appendChild(fileLink);
                 fileList.appendChild(fileSize);
                 fileList.appendChild(document.createElement('br'));
 
                 fileListDiv.appendChild(fileList);
-                fileListDiv.appendChild(document.createElement('br'));
+                // fileListDiv.appendChild(document.createElement('br'));
             }
         }
 
-        window.onload = fetchJsonData(); // 页面加载时调用
+        function check() {
+            const fileInput = document.getElementById('file');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert('请先选择文件');
+                return false; // 阻止表单提交
+            }
+
+            if (file.size === 0) {
+                alert('不能上传空文件');
+                return false; // 阻止表单提交
+            }
+
+            return true; // 允许表单提交
+        }
+
+        // window.onload = fetchJsonData(); // 页面加载时调用
+        fetchJsonData();
     </script>
 </body>
 
