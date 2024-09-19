@@ -3,6 +3,7 @@
 #include "data.hpp"
 #include "hot.hpp"
 #include "service.hpp"
+#include "daemon.hpp"
 #include <thread>
 
 void fileutil_Test(const std::string &filename)
@@ -176,6 +177,8 @@ int main(int argc, char *argv[])
     // dataTest(argv[1]);
     // hotTest();
     // serviceTest();
+    
+    daemon();//守护进程
 
     std::thread thread_hot_manager(hotTest);
     std::thread thread_service(serviceTest);
