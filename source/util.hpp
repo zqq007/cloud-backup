@@ -11,6 +11,9 @@
 #include "bundle.h"
 #include <unistd.h>
 #include <fcntl.h>
+#include <sstream>
+#include <iomanip>
+#include <stdexcept>
 
 namespace cloud
 {
@@ -254,4 +257,69 @@ namespace cloud
             return true;
         }
     };
+
+    // class CharacterConversionUitl
+    // {
+    // public:
+    //     static std::string UnicodeToUTF8(const std::string &unicode_str)
+    //     {
+    //         std::string utf8_str;
+    //         std::istringstream iss(unicode_str);
+    //         char c;
+
+    //         while (iss >> std::noskipws >> c)
+    //         {
+    //             if (c == '\\')
+    //             {
+    //                 char next = iss.peek();
+    //                 if (next == 'u')
+    //                 {
+    //                     iss.get(); // consume 'u'
+    //                     unsigned int code_point;
+    //                     iss >> std::hex >> code_point;
+
+    //                     // Convert code_point to UTF-8
+    //                     if (code_point <= 0x7F)
+    //                     {
+    //                         utf8_str.push_back(static_cast<char>(code_point));
+    //                     }
+    //                     else if (code_point <= 0x7FF)
+    //                     {
+    //                         utf8_str.push_back(static_cast<char>(0xC0 | (code_point >> 6)));
+    //                         utf8_str.push_back(static_cast<char>(0x80 | (code_point & 0x3F)));
+    //                     }
+    //                     else if (code_point <= 0xFFFF)
+    //                     {
+    //                         utf8_str.push_back(static_cast<char>(0xE0 | (code_point >> 12)));
+    //                         utf8_str.push_back(static_cast<char>(0x80 | ((code_point >> 6) & 0x3F)));
+    //                         utf8_str.push_back(static_cast<char>(0x80 | (code_point & 0x3F)));
+    //                     }
+    //                     else if (code_point <= 0x10FFFF)
+    //                     {
+    //                         utf8_str.push_back(static_cast<char>(0xF0 | (code_point >> 18)));
+    //                         utf8_str.push_back(static_cast<char>(0x80 | ((code_point >> 12) & 0x3F)));
+    //                         utf8_str.push_back(static_cast<char>(0x80 | ((code_point >> 6) & 0x3F)));
+    //                         utf8_str.push_back(static_cast<char>(0x80 | (code_point & 0x3F)));
+    //                     }
+    //                     else
+    //                     {
+    //                         // throw std::runtime_error("Invalid Unicode code point");
+    //                         return "";//直接返回空
+    //                     }
+    //                 }
+    //                 else
+    //                 {
+    //                     // throw std::runtime_error("Expected '\\u' sequence");
+    //                     return "";
+    //                 }
+    //             }
+    //             else
+    //             {
+    //                 utf8_str.push_back(c);
+    //             }
+    //         }
+
+    //         return utf8_str;
+    //     }
+    // };
 }
