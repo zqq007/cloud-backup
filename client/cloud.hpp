@@ -1,12 +1,14 @@
 #pragma once
 
+#define CPPHTTPLIB_OPENSSL_SUPPORT
+
 #include "data.hpp"
 #include "httplib.h"
 #include <Windows.h>
 
 namespace cloud
 {
-#define SERVER_IP "172.29.65.234"
+#define SERVER_IP "101.34.67.147"
 #define SERVER_PORT 9000
 
 #define BACKUP_FILE "./backup.dat"
@@ -15,12 +17,12 @@ namespace cloud
 	class Backup
 	{
 	public:
-		Backup(const std::string &back_dir, const std::string &filename):_back_dir(back_dir)
+		Backup(const std::string& back_dir, const std::string& filename) :_back_dir(back_dir)
 		{
 			_data = new DataManager(filename);
 		}
 
-		std::string getFileIdentifier(const std::string &filename)
+		std::string getFileIdentifier(const std::string& filename)
 		{
 			util fu(filename);
 			std::stringstream ss;
@@ -29,13 +31,17 @@ namespace cloud
 		}
 
 
-		bool upload(const std::string &filename)
+		bool upload(const std::string& filename)
 		{
 			util fu(filename);
 			std::string body;
 			fu.getContent(&body);
 
-			httplib::Client client(SERVER_IP, SERVER_PORT);
+			httplib::SSLClient client(SERVER_IP, SERVER_PORT);
+
+			// ç¦ç”¨è¯ä¹¦éªŒè¯
+			client.enable_server_certificate_verification(false);
+
 			httplib::MultipartFormData item;
 			item.content = body;
 			item.content_type = "application/octet-stream";
@@ -52,28 +58,28 @@ namespace cloud
 
 		bool uploader(const std::string& filename)
 		{
-			//ÅĞ¶Ï¸ÃÎÄ¼şÊÇ·ñĞèÒªÉÏ´«£¬ÅĞ¶ÏÒÀ¾İ£º1¡¢ÎÄ¼şÊÇĞÂÔö 2¡¢ÎÄ¼ş´æÔÚµ«±»ĞŞ¸Ä¹ı
-			//1¡¢ÊÇ·ñĞÂÔöÁËÎÄ¼ş£ºÖ»ÒªÅĞ¶Ï±¸·İĞÅÏ¢ÓĞÃ»ÓĞ¸ÃÎÄ¼şĞÅÏ¢¼´¿É
-			//2¡¢ÊÇ·ñ±»ĞŞ¸ÄÖ»ĞèÒªÆ¥¶ÔÎÄ¼ş±êÊ¶·ûÊÇ·ñÒ»ÖÂ¼´¿É
+			//åˆ¤æ–­è¯¥æ–‡ä»¶æ˜¯å¦éœ€è¦ä¸Šä¼ ï¼Œåˆ¤æ–­ä¾æ®ï¼š1ã€æ–‡ä»¶æ˜¯æ–°å¢ 2ã€æ–‡ä»¶å­˜åœ¨ä½†è¢«ä¿®æ”¹è¿‡
+			//1ã€æ˜¯å¦æ–°å¢äº†æ–‡ä»¶ï¼šåªè¦åˆ¤æ–­å¤‡ä»½ä¿¡æ¯æœ‰æ²¡æœ‰è¯¥æ–‡ä»¶ä¿¡æ¯å³å¯
+			//2ã€æ˜¯å¦è¢«ä¿®æ”¹åªéœ€è¦åŒ¹å¯¹æ–‡ä»¶æ ‡è¯†ç¬¦æ˜¯å¦ä¸€è‡´å³å¯
 
-			//·µ»ØÖµ£ºÈç¹ûÉÏ´«ÁË·µ»Øtrue£¬Ã»ÉÏ´«·µ»Øfalse
+			//è¿”å›å€¼ï¼šå¦‚æœä¸Šä¼ äº†è¿”å›trueï¼Œæ²¡ä¸Šä¼ è¿”å›false
 
-			//ÏÈÅĞ¶ÏĞè²»ĞèÒªÉÏ´«
+			//å…ˆåˆ¤æ–­éœ€ä¸éœ€è¦ä¸Šä¼ 
 			std::string file_id;
 			if (_data->getOneByKey(filename, &file_id) != false)
 			{
-				//ËµÃ÷ÎÄ¼ş´æÔÚ
-				//ÅĞ¶ÏÎÄ¼ş±êÊ¶·ûÊÇ·ñÒ»ÖÂ
+				//è¯´æ˜æ–‡ä»¶å­˜åœ¨
+				//åˆ¤æ–­æ–‡ä»¶æ ‡è¯†ç¬¦æ˜¯å¦ä¸€è‡´
 				std::string id = getFileIdentifier(filename);
 				if (file_id == id)
 				{
-					//ÏàµÈ£¬²»ĞèÒªÉÏ´«
+					//ç›¸ç­‰ï¼Œä¸éœ€è¦ä¸Šä¼ 
 					return false;
 				}
 			}
 
-			//ÉÏ´«Âß¼­
-			//ÕâÀï»¹ÓĞÒ»¸öµØ·½ĞèÒª×¢Òâ,Èç¹ûÎÄ¼ş±»Æµ·±Ğ´Èë£¬ÄÇÃ´¾Í»áÆµ·±ÉÏ´«£¬ËùÒÔÎÒÃÇÉè¶¨Ò»¸öÊ±¼ä£¬ÕâÀïÉè¶¨30Ãë£¬30ÃëÄÚÃ»ÓĞ±»ĞŞ¸Ä²ÅÉÏ´«
+			//ä¸Šä¼ é€»è¾‘
+			//è¿™é‡Œè¿˜æœ‰ä¸€ä¸ªåœ°æ–¹éœ€è¦æ³¨æ„,å¦‚æœæ–‡ä»¶è¢«é¢‘ç¹å†™å…¥ï¼Œé‚£ä¹ˆå°±ä¼šé¢‘ç¹ä¸Šä¼ ï¼Œæ‰€ä»¥æˆ‘ä»¬è®¾å®šä¸€ä¸ªæ—¶é—´ï¼Œè¿™é‡Œè®¾å®š30ç§’ï¼Œ30ç§’å†…æ²¡æœ‰è¢«ä¿®æ”¹æ‰ä¸Šä¼ 
 			util fu(filename);
 			if (time(nullptr) - fu.lastModTime() < 3) return false;
 
@@ -85,15 +91,15 @@ namespace cloud
 		{
 			while (true)
 			{
-				//»ñÈ¡ËùÓĞÎÄ¼şĞÅÏ¢
+				//è·å–æ‰€æœ‰æ–‡ä»¶ä¿¡æ¯
 				util fu(_back_dir);
 				std::vector<std::string> arr;
 				fu.scanDirectory(&arr);
-				//ÉÏ´«
+				//ä¸Šä¼ 
 				for (auto& file : arr)
 				{
-					//Èç¹ûÉÏ´«³É¹¦²ÅĞÂÔö±¸·İĞÅÏ¢£¬Èç¹ûÉÏ´«Ê§°Ü²»×öÈÎºÎ´¦Àí£¬ÒòÎªÕâÊÇËÀÑ­»·£¬ÏÂÒ»´Î»¹»á¼ÌĞøÉÏ´«
-					if(uploader(file) == true)
+					//å¦‚æœä¸Šä¼ æˆåŠŸæ‰æ–°å¢å¤‡ä»½ä¿¡æ¯ï¼Œå¦‚æœä¸Šä¼ å¤±è´¥ä¸åšä»»ä½•å¤„ç†ï¼Œå› ä¸ºè¿™æ˜¯æ­»å¾ªç¯ï¼Œä¸‹ä¸€æ¬¡è¿˜ä¼šç»§ç»­ä¸Šä¼ 
+					if (uploader(file) == true)
 						_data->insert(file, getFileIdentifier(file));
 				}
 				Sleep(1000);
