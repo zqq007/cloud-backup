@@ -5,14 +5,15 @@
 #include "util.hpp"
 #include "httplib.h"
 #include "data.hpp"
+#include "daemon.hpp"
 
 // extern cloud::DataManager *data;
 
 int main()
 {
+    daemon();//守护进程
     // httplib::SSLServer svr("transfer-cert.pem", "transfer-key.pem");
     httplib::SSLServer svr("server-cert.pem", "server-key.pem");
-    // httplib::Server svr; // 创建 HTTP 服务器
 
     std::string file_content;
 
@@ -42,9 +43,17 @@ int main()
                 std::string content;
                 file.getContent(&content);
 
+                // std::cout << "File content: " << content << std::endl;
+
                 Json::Value value(Json::arrayValue);
 
                 cloud::JsonUtil::unserialize(content, &value);
+                // if (!cloud::JsonUtil::unserialize(content, &value))
+                // {
+                //     res.status = 400;
+                //     res.set_content("Invalid JSON format", "text/plain");
+                //     return;
+                // }
                 cloud::JsonUtil::serialize(value, &content);
 
                 // 设置响应内容类型为 JSON 并返回数据
@@ -52,12 +61,12 @@ int main()
                 // res.set_header("Access-Control-Allow-Origin", "*"); // 允许所有来源
             });
 
-    svr.Get("/photo", [](const httplib::Request &, httplib::Response &res){
-        cloud::util file("./wwwroot/img/oICbA2KpwFCADANAEmEDeWfmIASjglArADkkM9~tplv-dy-aweme-images_q75.jpeg");
-                std::string content;
-                file.getContent(&content);
-                res.set_content(content, "img/jpeg");
-    });
+    // svr.Get("/photo", [](const httplib::Request &, httplib::Response &res)
+    //         {
+    //     cloud::util file("./wwwroot/img/wallhaven-o5m397.jpg");
+    //             std::string content;
+    //             file.getContent(&content);
+    //             res.set_content(content, "img/jpeg"); });
 
     svr.listen("0.0.0.0", 8080); // 启动服务器监听 8080 端口
 

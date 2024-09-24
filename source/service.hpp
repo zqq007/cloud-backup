@@ -16,7 +16,7 @@ namespace cloud
     class Service
     {
     public:
-        Service():_server("server-cert.pem", "server-key.pem")
+        Service() : _server("server-cert.pem", "server-key.pem")
         {
             // _server.new_task_queue = [] { return new httplib::ThreadPool(8); }; // 配置线程池大小
             //_server("server-cert.pem", "server-key.pem");
@@ -42,43 +42,54 @@ namespace cloud
         }
 
     private:
+        static std::string fileNameCheck(const std::string &filename)
+        {
+            std::string new_filename = "";
+            for(const auto &c : filename)
+            {
+                if(c == '#') new_filename += "%23";
+                else new_filename += c;
+            }
+            return new_filename;
+        }
+
         static void upLoad(const httplib::Request &req, httplib::Response &res)
         {
-            clock_t start, end;
-
-            start = clock();
-            std::cout << start << std::endl;
-            
             // 判断有没有文件上传
             bool ret = req.has_file("file");
             if (!ret)
             {
                 res.status = 400;
                 return;
-            } 
-
-            start = clock();
-            std::cout << "This comment, start is " << start << ",there's a file coming" << std::endl;
+            }
 
             // 获取文件信息
             const auto &file = req.get_file_value("file");
             std::string back_dir = Config::getInstance()->getBackDir();
+            // std::string real_path = back_dir + fileNameCheck(util(file.filename).fileName());
             std::string real_path = back_dir + util(file.filename).fileName();
             util fu(real_path);
-            std::cout << real_path << std::endl;
+            // std::cout << real_path << std::endl;
 
             // 将数据写入文件中
             fu.setContent(file.content);
-
-            end = clock();
-            std::cout << "end is " << end << std::endl;
-            double total_t = (double)(end - start) / CLOCKS_PER_SEC;
-            std::cout << total_t << std::endl;
 
             // 组织备份信息，并添加到数据管理模块中
             cloud::BackupInfo info;
             info.createBackupInfo(real_path);
             data->insert(info);
+
+            // return to web page
+            util filename("./wwwroot/upload.html");
+
+            std::string filecontent;
+            filename.getContent(&filecontent);
+
+            // std::cout << filecontent.c_str() << std::endl;
+
+            res.body = filecontent.c_str();
+            res.set_header("Content-Type", "text/html");
+            res.status = 200;
 
             return;
         }
@@ -150,10 +161,20 @@ namespace cloud
 
         static void download(const httplib::Request &req, httplib::Response &res)
         {
-            // std::cout << req.path << std::endl;
+            // std::cout << "Request path: " << req.path << std::endl;
+            // std::cout << "Request headers: " << std::endl;
+            // for (const auto &header : req.headers)
+            // {
+            //     std::cout << header.first << ": " << header.second << std::endl;
+            // }
+
             // 根据请求获取文件信息
             BackupInfo info;
-            data->getOneByURL(req.path, &info);
+            if (!data->getOneByURL(req.path, &info))
+            {
+                std::cerr << "没有" << req.path << "该文件" << std::endl;
+                return;
+            }
             // 判断该文件是否被压缩
             // 如果被压缩，先解压，删除压缩包，修改备份信息
             if (info._pack_flag)
@@ -166,7 +187,6 @@ namespace cloud
             }
             // 将文件内容放入res.body中
             util fu(info._real_path);
-
             bool breakpoint_resume = false; // 判断是否是断点续传标识符
             std::string old_etag;
             if (req.has_header("If-Range"))
@@ -195,6 +215,11 @@ namespace cloud
                 fu.getContent(&res.body);
                 res.set_header("Accept-Ranges", "bytes");
                 res.set_header("ETag", getETag(info));
+                // if (fu.getFileSuffix() == "mp4")
+                // {
+                //     std::cout << fu.fileName() << std::endl;
+                //     res.set_header("Content-Type", "video/mpeg4");
+                // }
                 res.status = 206;
             }
         }

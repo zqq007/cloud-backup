@@ -23,6 +23,7 @@ namespace cloud
         bool createBackupInfo(const std::string &realpath)
         {
             cloud::Config *config = cloud::Config::getInstance();
+            // std::cout << realpath << std::endl;
 
             // 获取文件信息
             util fu(realpath);
@@ -94,6 +95,7 @@ namespace cloud
                 info._fsize = it["fsize"].asInt();
                 info._mtime = it["mtime"].asInt();
                 info._pack_flag = it["pack_flag"].asBool();
+
                 info._pack_path = it["pack_path"].asString();
                 info._real_path = it["real_path"].asString();
                 info._url_path = it["url"].asString();
