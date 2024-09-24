@@ -12,13 +12,13 @@ namespace cloud
 	public:
 		int split(std::string body, const std::string& seq, std::vector<std::string>* arr)
 		{
-			int count = 0;//¼ÆÊı
+			int count = 0;//è®¡æ•°
 			size_t pos = 0, index = 0;
 			while (true)
 			{
 				pos = body.find(seq.c_str(), index);
 				if (pos == std::string::npos) break;
-				//·ÀÖ¹¶à¸ö¿Õ¸ñ
+				//é˜²æ­¢å¤šä¸ªç©ºæ ¼
 				if (pos == index)
 				{
 					index += seq.size();
@@ -29,7 +29,7 @@ namespace cloud
 				count++;
 				index = pos + seq.size();
 			}
-			//×îºóÒ»¸ö¿Õ¸ñÓë½áÎ²´¦Òª¼ÇµÃ¼ÓÉÏ
+			//æœ€åä¸€ä¸ªç©ºæ ¼ä¸ç»“å°¾å¤„è¦è®°å¾—åŠ ä¸Š
 			if (index < body.size())
 			{
 				arr->push_back(body.substr(index));
@@ -38,11 +38,11 @@ namespace cloud
 			return count;
 		}
 
-		DataManager(const std::string& backup_file) :_backup_file(backup_file) 
+		DataManager(const std::string& backup_file) :_backup_file(backup_file)
 		{
-			//Èç¹ûÎÄ¼ş²»´æÔÚÔò´´½¨
+			//å¦‚æœæ–‡ä»¶ä¸å­˜åœ¨åˆ™åˆ›å»º
 			util fu(_backup_file);
-			if(!fu.exists())
+			if (!fu.exists())
 			{
 				std::ofstream ofs;
 				ofs.open(_backup_file, std::ios::binary);
@@ -52,12 +52,12 @@ namespace cloud
 					exit(-1);
 				}
 			}
-			initLoad(); 
+			initLoad();
 		}
 
 		bool storage()
 		{
-			//»ñÈ¡ËùÓĞÎÄ¼şĞÅÏ¢,½«ËùÓĞĞÅÏ¢½øĞĞÌØ¶¨¸ñÊ½»¯×éÖ¯
+			//è·å–æ‰€æœ‰æ–‡ä»¶ä¿¡æ¯,å°†æ‰€æœ‰ä¿¡æ¯è¿›è¡Œç‰¹å®šæ ¼å¼åŒ–ç»„ç»‡
 			std::stringstream ss;
 			for (auto& it : _tables)
 			{
@@ -83,7 +83,7 @@ namespace cloud
 				split(s, " ", &temp);
 				if (temp.size() != 2)
 				{
-					//ËµÃ÷Êı¾İ¸ñÊ½³öÏÖÎÊÌâ£¬Ö±½Ócontinue
+					//è¯´æ˜æ•°æ®æ ¼å¼å‡ºç°é—®é¢˜ï¼Œç›´æ¥continue
 					continue;
 				}
 				_tables[temp[0]] = temp[1];
@@ -91,21 +91,21 @@ namespace cloud
 			return true;
 		}
 
-		bool insert(const std::string &key, const std::string &val)
+		bool insert(const std::string& key, const std::string& val)
 		{
 			_tables[key] = val;
 			storage();
 			return true;
 		}
 
-		bool update(const std::string &key, const std::string &val)
+		bool update(const std::string& key, const std::string& val)
 		{
 			_tables[key] = val;
 			storage();
 			return true;
 		}
 
-		bool getOneByKey(const std::string &key, std::string *val)
+		bool getOneByKey(const std::string& key, std::string* val)
 		{
 			auto it = _tables.find(key);
 			if (it == _tables.end()) return false;
@@ -115,6 +115,6 @@ namespace cloud
 
 	private:
 		std::string _backup_file;
-		std::unordered_map<std::string, std::string> _tables;//key£ºÎÄ¼şÂ·¾¶Ãû³Æ£¬ value£ºÎÄ¼şÎ¨Ò»±êÊ¶·û
+		std::unordered_map<std::string, std::string> _tables;//keyï¼šæ–‡ä»¶è·¯å¾„åç§°ï¼Œ valueï¼šæ–‡ä»¶å”¯ä¸€æ ‡è¯†ç¬¦
 	};
 }

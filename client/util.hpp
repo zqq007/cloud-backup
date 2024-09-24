@@ -57,7 +57,7 @@ namespace cloud
             return filename_.substr(pos + 1);
         }
 
-        // »ñÈ¡ÎÄ¼þÖ¸¶¨Î»ÖÃ Ö¸¶¨³¤¶ÈµÄÊý¾Ý
+        // èŽ·å–æ–‡ä»¶æŒ‡å®šä½ç½® æŒ‡å®šé•¿åº¦çš„æ•°æ®
         bool getPosLen(std::string* body, size_t pos, size_t len)
         {
             size_t fsize = this->fileSize();
@@ -88,14 +88,14 @@ namespace cloud
             return true;
         }
 
-        // ¶ÁÈ¡ÎÄ¼þÊý¾Ý
+        // è¯»å–æ–‡ä»¶æ•°æ®
         bool getContent(std::string* body)
         {
             size_t fsize = this->fileSize();
             return getPosLen(body, 0, fsize);
         }
 
-        // ÏòÎÄ¼þÐ´ÈëÊý¾Ý
+        // å‘æ–‡ä»¶å†™å…¥æ•°æ®
         bool setContent(const std::string& body)
         {
             std::ofstream ofs;
@@ -133,10 +133,10 @@ namespace cloud
             createDirectory();
             for (auto& p : fs::directory_iterator(filename_))
             {
-                // Èç¹ûÊÇÎÄ¼þ¼Ð¾ÍÌø¹ý
+                // å¦‚æžœæ˜¯æ–‡ä»¶å¤¹å°±è·³è¿‡
                 if (fs::is_directory(p) == false)
                 {
-                    // relative_path ´øÓÐÂ·¾¶µÄÎÄ¼þÃû³Æ
+                    // relative_path å¸¦æœ‰è·¯å¾„çš„æ–‡ä»¶åç§°
                     array->push_back(fs::path(p).relative_path().string());
                 }
             }
