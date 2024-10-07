@@ -14,6 +14,6 @@ transfer:transfer.cpp
 .PHONY:clean
 clean:
 	rm cloud
-	rm -rf backdir/*
-	rm -rf packdir/*
-	rm cloud.dat
+	# rm -rf backdir/*
+	# rm -rf packdir/*
+	# rm cloud.dat
