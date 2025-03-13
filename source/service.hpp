@@ -80,15 +80,15 @@ namespace cloud
             data->insert(info);
 
             // return to web page
-            util filename("./wwwroot/upload.html");
+            // util filename("./wwwroot/upload.html");
 
-            std::string filecontent;
-            filename.getContent(&filecontent);
+            // std::string filecontent;
+            // filename.getContent(&filecontent);
 
-            // std::cout << filecontent.c_str() << std::endl;
+            // // std::cout << filecontent.c_str() << std::endl;
 
-            res.body = filecontent.c_str();
-            res.set_header("Content-Type", "text/html");
+            // res.body = filecontent.c_str();
+            // res.set_header("Content-Type", "text/html");
             res.status = 200;
 
             return;
@@ -133,7 +133,7 @@ namespace cloud
 
             // ss << "</table></body></html>";
 
-            util filename("./wwwroot/listshow.html");
+            util filename("./wwwroot/index.html");
 
             std::string filecontent;
             filename.getContent(&filecontent);
