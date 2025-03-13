@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>云备份管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fb;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .upload-section {
+            background: #f8f9fa;
+            border: 2px dashed #ced4da;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            transition: all 0.3s;
+        }
+
+        .upload-section:hover {
+            border-color: #4a90e2;
+            background: #f0f6ff;
+        }
+
+        #uploadBtn {
+            background: #4a90e2;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+
+        #uploadBtn:hover {
+            background: #357abd;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .file-list table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background: #f8f9fa;
+            color: #6c757d;
+        }
+
+        .download-btn {
+            background: #28a745;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .download-btn:hover {
+            background: #218838;
+        }
+
+        .file-size {
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #eee;
+            border-radius: 4px;
+            margin-top: 1rem;
+            overflow: hidden;
+            display: none;
+        }
+
+        .progress {
+            width: 0%;
+            height: 100%;
+            background: #4a90e2;
+            transition: width 0.3s;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>云备份文件管理</h1>
+
+        <!-- 上传区域 -->
+        <div class="upload-section">
+            <input type="file" id="fileInput">
+            <button id="uploadBtn">选择文件并上传</button>
+            <p>或拖放文件到此区域</p>
+            <div class="progress-bar">
+                <div class="progress"></div>
+            </div>
+        </div>
+
+        <!-- 文件列表 -->
+        <div class="file-list">
+            <h2>已备份文件</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>文件名</th>
+                        <th>大小</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="fileTable">
+                    <!-- 动态加载文件列表 -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // 原有功能函数
+        function getFileNameByPath(path) {
+            let pos = path.lastIndexOf("/");
+            return path.substring(pos + 1);
+        }
+
+        function getFileSize(file_size) {
+            let arr = ["B", "KB", "MB", "GB"];
+            let count = 0;
+            while (file_size >= 1024 && count < arr.length) {
+                file_size /= 1024;
+                count++;
+            }
+            return file_size.toFixed(2) + ' ' + arr[count];
+        }
+
+        function URLCheck(url) {
+            return encodeURI(url);
+        }
+
+        // 新版上传逻辑
+        const uploadBtn = document.getElementById('uploadBtn');
+        const fileInput = document.getElementById('fileInput');
+        const progressBar = document.querySelector('.progress-bar');
+        const progress = document.querySelector('.progress');
+
+        uploadBtn.addEventListener('click', () => fileInput.click());
+
+        // 拖放功能
+        const uploadSection = document.querySelector('.upload-section');
+        uploadSection.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadSection.style.borderColor = '#4a90e2';
+        });
+
+        uploadSection.addEventListener('dragleave', () => {
+            uploadSection.style.borderColor = '#ced4da';
+        });
+
+        uploadSection.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadSection.style.borderColor = '#ced4da';
+            const files = e.dataTransfer.files;
+            if (files.length) handleUpload(files[0]);
+        });
+
+        // 文件选择处理
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) handleUpload(e.target.files[0]);
+        });
+
+        async function handleUpload(file) {
+            if (file.size === 0) {
+                alert('不能上传空文件');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            // 上传文件进度
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', 'https://101.34.67.147:9000/upload', true);
+            xhr.upload.onprogress = (event) => {
+                if (event.lengthComputable) {
+                    const percentComplete = (event.loaded / event.total) * 100;
+                    progress.style.width = percentComplete + '%';
+                }
+            };
+
+            xhr.onload = () => {
+                if (xhr.status === 200) {
+                    // alert('上传成功');
+                    fetchJsonData();
+                } else {
+                    alert('上传失败');
+                }
+                progressBar.style.display = 'none';
+            };
+
+            xhr.onerror = () => {
+                alert('上传失败');
+                progressBar.style.display = 'none';
+            };
+
+            progressBar.style.display = 'block';
+            xhr.send(formData);
+
+            // try {
+            //     progressBar.style.display = 'block';
+
+            //     const response = await fetch('https://101.34.67.147:9000/upload', {
+            //         method: 'POST',
+            //         body: formData,
+            //         // 实际项目需要处理上传进度
+
+            //     });
+
+            //     if (!response.ok) throw new Error('上传失败');
+
+            //     // 上传成功后刷新列表
+            //     await fetchJsonData();
+
+            // } catch (error) {
+            //     alert(error.message);
+            // } finally {
+            //     progressBar.style.display = 'none';
+            // }
+        }
+
+        // 文件列表加载
+        async function fetchJsonData() {
+            try {
+                const response = await fetch("https://101.34.67.147:8080/data");
+                const data = await response.json();
+                const tbody = document.getElementById('fileTable');
+                tbody.innerHTML = '';
+
+                data.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${getFileNameByPath(item.real_path)}</td>
+                        <td class="file-size">${getFileSize(item.fsize)}</td>
+                        <td><a href="${URLCheck(item.url)}" class="download-btn">下载</a></td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('文件加载失败:', error);
+            }
+        }
+
+        // 初始化加载
+        fetchJsonData();
+    </script>
+</body>
+
+</html>
