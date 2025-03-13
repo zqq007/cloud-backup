@@ -61,13 +61,6 @@ int main()
                 // res.set_header("Access-Control-Allow-Origin", "*"); // 允许所有来源
             });
 
-    // svr.Get("/photo", [](const httplib::Request &, httplib::Response &res)
-    //         {
-    //     cloud::util file("./wwwroot/img/wallhaven-o5m397.jpg");
-    //             std::string content;
-    //             file.getContent(&content);
-    //             res.set_content(content, "img/jpeg"); });
-
     svr.listen("0.0.0.0", 8080); // 启动服务器监听 8080 端口
 
     // svr.listen("0.0.0.0", 8080);
